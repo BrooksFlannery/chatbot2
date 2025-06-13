@@ -3,8 +3,6 @@
 import { Button } from "~/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card"
 import { Input } from "~/components/ui/input"
-import { Label } from "~/components/ui/label"
-import { authClient } from "~/lib/auth-client"
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { z } from 'zod'
@@ -18,42 +16,39 @@ import {
     FormLabel,
     FormMessage,
 } from "~/components/ui/form"
+import { signUp } from "~/server/server"
+import { toast } from "sonner"
+import { useState } from "react"
+import { Loader2 } from "lucide-react"
+
 
 const signupSchema = z.object({
     name: z.string().min(1, "Name is required"),
     email: z.string().email("Invalid email address"),
     password: z.string().min(8, "Password must be at least 8 characters"),
-    confirmPassword: z.string().min(8, "Confirm password is required"),
-}).refine(data => data.password === data.confirmPassword, {
-    message: "Passwords must match",
-    path: ["confirmPassword"],
 })
 
 export function SignupForm(props: React.ComponentProps<"div">) {
+    const [isLoading, setIsLoading] = useState(false)
+
     const form = useForm<z.infer<typeof signupSchema>>({
         resolver: zodResolver(signupSchema),
         defaultValues: {
             name: '',
             email: '',
             password: '',
-            confirmPassword: '',
         },
     })
-
     const onSubmit = async (values: z.infer<typeof signupSchema>) => {
-        const { name, email, password } = values
-
-        try {
-            const { data, error } = await authClient.signUp.email({
-                name,
-                email,
-                password,
-            })
-
-            if (!error) redirect('/')
-        } catch (err) {
-            console.error('Signup error:', err)
+        setIsLoading(true)
+        const { success, message } = await signUp(values.email, values.password, values.name)
+        if (success) {
+            toast.success(message as string);
+            redirect('/dashboard')
+        } else {
+            toast.error(message as string);
         }
+        setIsLoading(false)
     }
 
     return (
@@ -119,27 +114,15 @@ export function SignupForm(props: React.ComponentProps<"div">) {
                                 )}
                             />
 
-                            <FormField
-                                control={form.control}
-                                name="confirmPassword"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Confirm Password</FormLabel>
-                                        <FormControl>
-                                            <Input type="password" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-
                             <div className="flex flex-col gap-3">
                                 <Button
                                     type="submit"
                                     className="w-full"
-                                    disabled={!form.formState.isValid}
+                                    disabled={!form.formState.isValid || isLoading}
                                 >
-                                    Sign up
+                                    {isLoading
+                                        ? (<Loader2 className="size-4 animate-spin" />)
+                                        : ("Login")}
                                 </Button>
                                 <Button variant="outline" className="w-full">
                                     Sign up with Google
