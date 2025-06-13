@@ -23,13 +23,18 @@ import {
   FormMessage,
 } from "~/components/ui/form"
 import { Input } from "~/components/ui/input"
+import { toast } from "sonner"
 
 const formSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
 })
+import { signIn } from "~/server/server"
+import { useState } from "react"
+import { Loader2 } from "lucide-react"
 
 export function LoginForm(props: React.ComponentProps<"div">) {
+  const [isLoading, setIsLoading] = useState(false)
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -39,9 +44,15 @@ export function LoginForm(props: React.ComponentProps<"div">) {
   })
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const { email, password } = values
-    const { data, error } = await authClient.signIn.email({ email, password })
-    if (!error) redirect('/dashboard')
+    setIsLoading(true)
+    const { success, message } = await signIn(values.email, values.password)
+    if (success) {
+      toast.success(message as string);
+      redirect('/dashboard')
+    } else {
+      toast.error(message as string);
+    }
+    setIsLoading(false)
   }
 
   return (
@@ -97,8 +108,10 @@ export function LoginForm(props: React.ComponentProps<"div">) {
               />
 
               <div className="flex flex-col gap-3">
-                <Button type="submit" className="w-full">
-                  Login
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading
+                    ? (<Loader2 className="size-4 animate-spin" />)
+                    : ("Login")}
                 </Button>
                 <Button variant="outline" className="w-full">
                   Login with Google
