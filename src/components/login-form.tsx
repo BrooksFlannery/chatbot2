@@ -43,6 +43,13 @@ export function LoginForm(props: React.ComponentProps<"div">) {
     },
   })
 
+  const signInWithGoogle = async () => {
+    await authClient.signIn.social({
+      provider: "google",
+      callbackURL: "/dashboard"
+    })
+  }
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true)
     const { success, message } = await signIn(values.email, values.password)
@@ -113,7 +120,7 @@ export function LoginForm(props: React.ComponentProps<"div">) {
                     ? (<Loader2 className="size-4 animate-spin" />)
                     : ("Login")}
                 </Button>
-                <Button variant="outline" className="w-full">
+                <Button type="button" variant="outline" className="w-full" onClick={signInWithGoogle}>
                   Login with Google
                 </Button>
               </div>
