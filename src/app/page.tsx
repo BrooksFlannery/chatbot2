@@ -1,9 +1,13 @@
 import Link from "next/link";
-import { LoginForm } from "~/components/login-form";
+import { AppSidebar } from "~/components/app-sidebar";
+import { Logout } from "~/components/logout";
+import { SideBar } from "~/components/side-bar";
+
 export default async function Home() {
 
-
   return (
-    <div>HOME</div>
+    <>
+      <AppSidebar />
+    </>
   );
 }

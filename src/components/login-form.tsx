@@ -32,8 +32,10 @@ const formSchema = z.object({
 import { signIn } from "~/server/server"
 import { useState } from "react"
 import { Loader2 } from "lucide-react"
+import { useSidebar } from "./ui/sidebar"
 
 export function LoginForm(props: React.ComponentProps<"div">) {
+  const { setOpen } = useSidebar();
   const [isLoading, setIsLoading] = useState(false)
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -43,10 +45,10 @@ export function LoginForm(props: React.ComponentProps<"div">) {
     },
   })
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async () => {//need to plug my useSidebar into this
     await authClient.signIn.social({
       provider: "google",
-      callbackURL: "/dashboard"
+      callbackURL: "/"
     })
   }
 
@@ -55,7 +57,8 @@ export function LoginForm(props: React.ComponentProps<"div">) {
     const { success, message } = await signIn(values.email, values.password)
     if (success) {
       toast.success(message as string);
-      redirect('/dashboard')
+      setOpen(true);
+      redirect('/')
     } else {
       toast.error(message as string);
     }

@@ -3,6 +3,10 @@ import "~/styles/globals.css";
 import { type Metadata } from "next";
 import { Geist } from "next/font/google";
 import { Toaster } from "~/components/ui/sonner"
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "~/components/ui/sidebar"
+import { AppSidebar } from "~/components/app-sidebar"
+import { headers } from "next/headers";
+import { auth } from "~/lib/auth";
 
 
 export const metadata: Metadata = {
@@ -16,15 +20,31 @@ const geist = Geist({
   variable: "--font-geist-sans",
 });
 
-export default function RootLayout({
-  children,
-}: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const session = await auth.api.getSession({
+    headers: await headers()
+  });
+
   return (
     <html lang="en" className={`${geist.variable}`}>
       <body>
-        {children}
-        <Toaster />
+        <SidebarProvider defaultOpen={session ? true : false}>
+          <AppSidebar />
+          <SidebarInset>
+            <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+              <SidebarTrigger disabled={session ? false : true} className="-ml-1" />
+            </header>
+            <div className="flex flex-1 flex-col gap-4 p-4">
+              {children}
+            </div>
+          </SidebarInset>
+          <Toaster />
+        </SidebarProvider>
       </body>
     </html>
   );
+}
+
+function getServerSession(authOptions: any) {
+  throw new Error("Function not implemented.");
 }
