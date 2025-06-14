@@ -2,8 +2,9 @@ import "~/styles/globals.css";
 
 import { type Metadata } from "next";
 import { Geist } from "next/font/google";
-import { Toaster } from "~/components/ui/sonner"
-
+import { Toaster } from "~/components/ui/sonner";
+import { SidebarProvider, SidebarTrigger, SidebarInset } from "~/components/ui/sidebar";
+import { AppSidebar } from "~/components/app-sidebar";
 
 export const metadata: Metadata = {
   title: "Create T3 App",
@@ -22,8 +23,19 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geist.variable}`}>
       <body>
-        {children}
-        <Toaster />
+        <SidebarProvider defaultOpen={true}>
+          <AppSidebar />
+          <SidebarInset>
+            <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+              <SidebarTrigger className="-ml-1" />
+              {/* You can add other header content here */}
+            </header>
+            <div className="flex flex-1 flex-col gap-4 p-4">
+              {children}
+            </div>
+          </SidebarInset>
+          <Toaster />
+        </SidebarProvider>
       </body>
     </html>
   );

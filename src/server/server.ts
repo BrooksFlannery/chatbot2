@@ -46,6 +46,4 @@ export const signUp = async (email: string, password: string, name: string) => {
             message: e.message || "An unknown error occured"
         }
     }
-
-
 }

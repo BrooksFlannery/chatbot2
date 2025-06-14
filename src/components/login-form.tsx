@@ -46,7 +46,7 @@ export function LoginForm(props: React.ComponentProps<"div">) {
   const signInWithGoogle = async () => {
     await authClient.signIn.social({
       provider: "google",
-      callbackURL: "/dashboard"
+      callbackURL: "/"
     })
   }
 
@@ -55,7 +55,7 @@ export function LoginForm(props: React.ComponentProps<"div">) {
     const { success, message } = await signIn(values.email, values.password)
     if (success) {
       toast.success(message as string);
-      redirect('/dashboard')
+      redirect('/')
     } else {
       toast.error(message as string);
     }
