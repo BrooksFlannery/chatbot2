@@ -1,52 +1,52 @@
-// import { NextRequest, NextResponse } from 'next/server';
-// import { db } from '~/db/drizzle';
-// import { chatTable, roleEnum } from '~/db/schema';
-// import { MsgData } from '~/lib/definitions/types';
-// import { eq } from 'drizzle-orm';
-// import { getSessionCookie } from 'better-auth/cookies';
+// app/api/chat/[id]/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { db } from '~/db/drizzle';
+import { chat } from '~/db/schema';
+import { eq, and } from 'drizzle-orm';
+import { auth } from '~/lib/auth';
 
 
+//GET SPECIFIC CHAT
 
-// //get route next, must return array of messages. i should prob be defining message typs somewhere
-// export async function GET(req: NextRequest) {
-//     const session = getSessionCookie(req);
+export async function GET(
+    req: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const session = await auth.api.getSession({
+            headers: req.headers
+        });
 
-//     if (!session) {
-//         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-//     }
+        if (!session) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
 
-//     const userId = session.user.id;
+        const userId = session.user.id;
+        const { id } = await params;
+        const chatId = id;
 
-//     const chats = await db
-//         .select()
-//         .from(chatTable)
-//         .where(eq(chatTable.user_id, userId))
-//         .orderBy(chatTable.created_at);
+        if (!chatId || typeof chatId !== 'string') {
+            return NextResponse.json({ error: "Invalid chat ID" }, { status: 400 });
+        }
 
-//     return new Response(JSON.stringify(chats), { status: 200 });
-// }
+        const [chatData] = await db
+            .select()
+            .from(chat)
+            .where(and(
+                eq(chat.id, chatId),
+                eq(chat.userId, userId)
+            ));
 
+        if (!chatData) {
+            return NextResponse.json({ error: "Chat not found" }, { status: 404 });
+        }
 
-// export async function POST(req: NextRequest) {
-//     try {
-//         const { userId } = await req.json();
-//         if (!userId) {
-//             return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
-//         }
-//         const [newChat] = await db
-//             .insert(chatTable)
-//             .values({
-//                 user_id: userId,
-//             })
-//             .returning({ id: chatTable.id });
-
-//         return NextResponse.json({ id: newChat.id });
-//     } catch (error) {
-//         console.error('Error in /api/chat POST:', error);
-//         return NextResponse.json(
-//             { error: 'Internal Server Error' },
-//             { status: 500 }
-//         );
-//     }
-// }
-
+        return NextResponse.json(chatData);
+    } catch (error) {
+        console.error('Error in /api/chat/[id] GET:', error);
+        return NextResponse.json(
+            { error: 'Internal Server Error' },
+            { status: 500 }
+        );
+    }
+}

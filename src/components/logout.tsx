@@ -3,11 +3,14 @@
 import { authClient } from "~/lib/auth-client";
 import { Button } from "./ui/button";
 import { LogOut } from 'lucide-react'
-import { redirect } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
+import { useSidebar } from "./ui/sidebar";
 
 
 export function Logout() {
+    const { setOpen } = useSidebar();
     const handleLogout = async () => {
+        setOpen(false)
         await authClient.signOut();
         redirect('/')
     };

@@ -9,6 +9,7 @@ import type { ChatData } from "~/lib/definitions/types";
 import {
     Sidebar,
     SidebarContent,
+    SidebarFooter,
     SidebarGroup,
     SidebarGroupContent,
     SidebarGroupLabel,
@@ -16,6 +17,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from "~/components/ui/sidebar";
+import { Logout } from "./logout";
 
 // Navigation menu items
 const navItems = [
@@ -153,6 +155,9 @@ export function AppSidebar() {
                     </SidebarGroupContent>
                 </SidebarGroup>
             </SidebarContent>
+            <SidebarFooter>
+                <Logout />
+            </SidebarFooter>
         </Sidebar>
     );
 }

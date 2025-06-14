@@ -1,183 +1,207 @@
 import type { UserData, ChatData, MsgData } from "~/lib/definitions/types";
 import { chatSchema } from "~/lib/definitions/zod";
 
-
 export interface chatBotAPI {
     getChats(): Promise<ChatData[]>;
     createChat(): Promise<ChatData['id']>;
-    // getChat(id: ChatData["id"]): Promise<ChatData>;
-    // // deleteChat()
-    // getMsgs(id: ChatData["id"]): Promise<MsgData[]>;
-    // postMsg(
-    //     msg: string,
-    //     chatId: number,
-    //     setMsgs: React.Dispatch<React.SetStateAction<any[]>>,
-    //     setThinking: (value: boolean) => void,
-    //     setResponding: (value: boolean) => void
-    // ): Promise<void>
+    getChat(id: ChatData["id"]): Promise<ChatData>;
+    getMsgs(id: ChatData["id"]): Promise<MsgData[]>;
 }
-
 
 export class clientBotAPI implements chatBotAPI {
     async getChats(): Promise<ChatData[]> {
         try {
-
             const res = await fetch("/api/chat", {
                 method: "GET",
                 headers: { "Content-Type": "application/json" },
             });
 
+            if (!res.ok) {
+                throw new Error(`Failed to fetch chats: ${res.status}`);
+            }
+
             const data = await res.json() as ChatData[];
-            return (data)
+            return data;
 
         } catch (error) {
+            console.error('Error fetching chats:', error);
             throw error;
         }
     }
 
     async createChat(): Promise<ChatData["id"]> {
-        const res = await fetch("/api/chat", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-        });
-        const data = await res.json();
-        return data.id;
+        try {
+            const res = await fetch("/api/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+            });
+
+            if (!res.ok) {
+                throw new Error(`Failed to create chat: ${res.status}`);
+            }
+
+            const data = await res.json();
+            return data.id;
+        } catch (error) {
+            console.error('Error creating chat:', error);
+            throw error;
+        }
     }
 
-    // async getChat(chatId: ChatData['id']): Promise<ChatData> {
-    //     const res = await fetch(`/api/chat/${chatId}`);
+    async getChat(chatId: ChatData['id']): Promise<ChatData> {
 
-    //     if (!res.ok) {
-    //         throw new Error(`Failed to fetch chat: ${res.status}`);
-    //     }
+        try {
+            const res = await fetch(`/api/chat/${chatId}`);
 
-    //     const data = await res.json();
+            if (!res.ok) {
+                throw new Error(`Failed to fetch chat: ${res.status}`);
+            }
 
-    //     const mappedData = {
-    //         id: data.id,
-    //         userId: data.user_id,
-    //         chatName: data.chat_name,
-    //         createdAt: new Date(data.created_at),
-    //     };
+            const data = await res.json();
 
-    //     return chatSchema.parse(mappedData);
-    // }
+            // Debug log to see what we're getting
+            console.log('Raw chat data:', data);
 
-    // async getMsgs(chatId: ChatData['id']): Promise<MsgData[]> {
-    //     const res = await fetch(`/api/chat/${chatId}/messages`);
+            // Let the schema handle the preprocessing - pass strings, not Date objects
+            const mappedData = {
+                id: data.id,
+                userId: data.userId,
+                chatName: data.chatName || "New Chat",
+                createdAt: data.createdAt || new Date().toISOString(), // Pass as string
+            };
 
-    //     if (!res.ok) {
-    //         throw new Error(`Failed to fetch messages: ${res.status}`);
-    //     }
+            console.log('Mapped chat data:', mappedData);
 
-    //     const data = await res.json();
+            return chatSchema.parse(mappedData);
+        } catch (error) {
+            console.error('Chat validation error:', error);
+            throw error;
+        }
+    }
 
-    //     if (!Array.isArray(data)) {
-    //         throw new Error('Invalid response format: expected array');
-    //     }
+    async getMsgs(chatId: ChatData['id']): Promise<MsgData[]> {
+        try {
+            const res = await fetch(`/api/chat/${chatId}/messages`);
 
-    //     return data;
-    // }
+            if (!res.ok) {
+                throw new Error(`Failed to fetch messages: ${res.status}`);
+            }
 
-    // async postMsg(
-    //     msg: string,
-    //     chatId: number,
-    //     setMsgs: React.Dispatch<React.SetStateAction<any[]>>,
-    //     setThinking: (value: boolean) => void,
-    //     setResponding: (value: boolean) => void
-    // ): Promise<void> {
-    //     setResponding(true);
-    //     setThinking(true);
+            const data = await res.json();
 
-    //     try {
-    //         const res = await fetch(`/api/chat/${chatId}/messages`, {
-    //             method: "POST",
-    //             headers: { "Content-Type": "application/json" },
-    //             body: JSON.stringify({ msg }),
-    //         });
+            if (!Array.isArray(data)) {
+                throw new Error('Invalid response format: expected array');
+            }
 
-    //         if (!res.ok) {
-    //             const data = await res.json();
-    //             console.error('Failed to send message:', data);
-    //             return;
-    //         }
+            return data;
+        } catch (error) {
+            console.error('Error fetching messages:', error);
+            throw error;
+        }
+    }
 
-    //         if (!res.body) return;
+    async postMsg(
+        msg: string,
+        chatId: string, // Changed to string since your IDs are UUIDs
+        setMsgs: React.Dispatch<React.SetStateAction<MsgData[]>>,
+        setThinking: (value: boolean) => void,
+        setResponding: (value: boolean) => void
+    ): Promise<void> {
+        setResponding(true);
+        setThinking(true);
 
-    //         setThinking(false);
-    //         const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
-    //         const aiMessageId = `ai-${Date.now()}`;
-    //         let aiMessageContent = '';
-    //         let buffer = '';
+        try {
+            const res = await fetch(`/api/chat/${chatId}/messages`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ msg }),
+            });
 
-    //         try {
-    //             const newAiMessage = {
-    //                 id: aiMessageId,
-    //                 role: 'assistant',
-    //                 content: '',
-    //             };
-    //             setMsgs(prev => [...prev, newAiMessage]);
+            if (!res.ok) {
+                const data = await res.json();
+                console.error('Failed to send message:', data);
+                return;
+            }
 
-    //             while (true) {
-    //                 const { done, value } = await reader.read();
-    //                 if (done) break;
+            if (!res.body) return;
 
-    //                 buffer += value;
-    //                 const lines = buffer.split('\n');
-    //                 buffer = lines.pop() || '';
+            setThinking(false);
+            const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
+            const aiMessageId = `ai-${Date.now()}`;
+            let aiMessageContent = '';
+            let buffer = '';
 
-    //                 for (const line of lines) {
-    //                     if (line.startsWith('0:')) {
-    //                         try {
-    //                             const content = JSON.parse(line.slice(2));
-    //                             aiMessageContent += content;
+            try {
+                const newAiMessage: MsgData = {
+                    id: aiMessageId,
+                    role: 'assistant',
+                    content: '',
+                    createdAt: new Date(),
+                    chatId: chatId,
+                    accessedAt: new Date(),
+                };
+                setMsgs(prev => [...prev, newAiMessage]);
 
-    //                             setMsgs(prev =>
-    //                                 prev.map(msg =>
-    //                                     msg.id === aiMessageId
-    //                                         ? { ...msg, content: aiMessageContent }
-    //                                         : msg
-    //                                 )
-    //                             );
-    //                         } catch (e) {
-    //                             console.error('Failed to parse streaming content:', e);
-    //                         }
-    //                     }
-    //                 }
-    //             }
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
 
-    //             if (aiMessageContent.trim()) {
+                    buffer += value;
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop() || '';
 
-    //                 const saveResponse = await fetch(`/api/chat/${chatId}/messages/ai`, {
-    //                     method: 'POST',
-    //                     headers: { 'Content-Type': 'application/json' },
-    //                     body: JSON.stringify({
-    //                         content: aiMessageContent,
-    //                     }),
-    //                 });
+                    for (const line of lines) {
+                        if (line.startsWith('0:')) {
+                            try {
+                                const content = JSON.parse(line.slice(2));
+                                aiMessageContent += content;
 
-    //                 if (saveResponse.ok) {
-    //                     const savedMessage = await saveResponse.json();
-    //                     setMsgs(prev =>
-    //                         prev.map(msg =>
-    //                             msg.id === aiMessageId
-    //                                 ? { ...msg, id: savedMessage.id.toString() }
-    //                                 : msg
-    //                         )
-    //                     );
-    //                 } else {
-    //                     console.error('Failed to save AI message');
-    //                 }
-    //             }
+                                setMsgs(prev =>
+                                    prev.map(msg =>
+                                        msg.id === aiMessageId
+                                            ? { ...msg, content: aiMessageContent }
+                                            : msg
+                                    )
+                                );
+                            } catch (e) {
+                                console.error('Failed to parse streaming content:', e);
+                            }
+                        }
+                    }
+                }
 
-    //         } finally {
-    //             reader.releaseLock();
-    //         }
-    //     } catch (error) {
-    //         console.error('Error in sendMsg:', error);
-    //     } finally {
-    //         setResponding(false);
-    //         setThinking(false);
-    //     }
-    // }
+                // Save the AI response to database
+                if (aiMessageContent.trim()) {
+                    const saveResponse = await fetch(`/api/chat/${chatId}/messages/ai`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            content: aiMessageContent,
+                        }),
+                    });
+
+                    if (saveResponse.ok) {
+                        const savedMessage = await saveResponse.json();
+                        setMsgs(prev =>
+                            prev.map(msg =>
+                                msg.id === aiMessageId
+                                    ? { ...msg, id: savedMessage.id }
+                                    : msg
+                            )
+                        );
+                    } else {
+                        console.error('Failed to save AI message');
+                    }
+                }
+
+            } finally {
+                reader.releaseLock();
+            }
+        } catch (error) {
+            console.error('Error in postMsg:', error);
+        } finally {
+            setResponding(false);
+            setThinking(false);
+        }
+    }
 }
