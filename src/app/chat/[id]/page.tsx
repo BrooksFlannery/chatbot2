@@ -26,7 +26,6 @@ export default function Chat() {
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        // Add type guard to ensure chatId is a string
         if (!chatId || typeof chatId !== "string") {
             console.error('Invalid chat ID');
             return;
@@ -37,7 +36,7 @@ export default function Chat() {
             role: 'user',
             content: input,
             createdAt: new Date(),
-            chatId: chatId, // Now TypeScript knows this is a string
+            chatId: chatId,
             accessedAt: new Date(),
         };
         setMsgs(prev => [...(prev), newUserMsg]);
@@ -46,7 +45,7 @@ export default function Chat() {
         try {
             await api.postMsg(
                 input,
-                chatId, // Now TypeScript knows this is a string
+                chatId,
                 setMsgs,
                 setThinking,
                 setResponding,
@@ -59,7 +58,6 @@ export default function Chat() {
         }
     };
 
-    // Early return if chatId is invalid
     if (!chatId || typeof chatId !== "string") {
         return <div>Invalid chat ID</div>;
     }
@@ -102,7 +100,6 @@ export default function Chat() {
                     autoFocus
                 />
                 <button type="submit" disabled={responding || !chat || !input.trim()}>
-                    {/* Added !input.trim() as you mentioned in the comment */}
                     Send
                 </button>
             </form>
