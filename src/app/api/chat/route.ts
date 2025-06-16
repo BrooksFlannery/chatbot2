@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '~/db/drizzle';
-import { chat } from '~/db/schema'; // Fixed: Import 'chat' not 'chatTable'
-import type { MsgData } from '~/lib/definitions/types'; // Fixed: type-only import
+import { chat } from '~/db/schema';
 import { eq } from 'drizzle-orm';
-import { auth } from '~/lib/auth'; // Import your Better Auth instance
+import { auth } from '~/lib/auth';
 
 //GET ALL CHATS   CREATE NEW CHAT
 
-//get route next, must return array of messages. i should prob be defining message typs somewhere
 export async function GET(req: NextRequest) {
     // Use Better Auth's proper session verification
     const session = await auth.api.getSession({
@@ -22,7 +20,7 @@ export async function GET(req: NextRequest) {
 
     const chats = await db
         .select()
-        .from(chat) // Fixed: use 'chat' table
+        .from(chat)
         .where(eq(chat.userId, userId))
         .orderBy(chat.createdAt);
 
@@ -31,7 +29,6 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
     try {
-        // Use Better Auth's proper session verification
         const session = await auth.api.getSession({
             headers: req.headers
         });
@@ -42,7 +39,7 @@ export async function POST(req: NextRequest) {
 
         const userId = session.user.id;
         const [newChat] = await db
-            .insert(chat) // Fixed: use 'chat' table
+            .insert(chat)
             .values({
                 userId: userId,
             })

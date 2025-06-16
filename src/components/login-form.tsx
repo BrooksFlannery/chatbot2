@@ -45,11 +45,12 @@ export function LoginForm(props: React.ComponentProps<"div">) {
     },
   })
 
-  const signInWithGoogle = async () => {//need to plug my useSidebar into this
+  const signInWithGoogle = async () => {
     await authClient.signIn.social({
       provider: "google",
       callbackURL: "/"
     })
+    setOpen(true)
   }
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {

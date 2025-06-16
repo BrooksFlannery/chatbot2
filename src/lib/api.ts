@@ -59,15 +59,13 @@ export class clientBotAPI implements chatBotAPI {
 
             const data = await res.json();
 
-            // Debug log to see what we're getting
             console.log('Raw chat data:', data);
 
-            // Let the schema handle the preprocessing - pass strings, not Date objects
             const mappedData = {
                 id: data.id,
                 userId: data.userId,
                 chatName: data.chatName || "New Chat",
-                createdAt: data.createdAt || new Date().toISOString(), // Pass as string
+                createdAt: data.createdAt || new Date().toISOString(),
             };
 
             console.log('Mapped chat data:', mappedData);
@@ -102,16 +100,17 @@ export class clientBotAPI implements chatBotAPI {
 
     async postMsg(
         msg: string,
-        chatId: string, // Changed to string since your IDs are UUIDs
+        chatId: string,
         setMsgs: React.Dispatch<React.SetStateAction<MsgData[]>>,
         setThinking: (value: boolean) => void,
         setResponding: (value: boolean) => void
     ): Promise<void> {
         setResponding(true);
         setThinking(true);
+        console.log('post message start')
 
         try {
-            const res = await fetch(`/api/chat/${chatId}/messages`, {
+            const res = await fetch(`/api/chat/${chatId}/messages`, {//can i just plug into getMsgs function right here? is that better worse or the same
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ msg }),
@@ -127,6 +126,7 @@ export class clientBotAPI implements chatBotAPI {
 
             setThinking(false);
             const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
+            console.log('start streaming ai response')
             const aiMessageId = `ai-${Date.now()}`;
             let aiMessageContent = '';
             let buffer = '';
@@ -147,6 +147,7 @@ export class clientBotAPI implements chatBotAPI {
                     if (done) break;
 
                     buffer += value;
+                    console.log(buffer);
                     const lines = buffer.split('\n');
                     buffer = lines.pop() || '';
 
@@ -167,10 +168,13 @@ export class clientBotAPI implements chatBotAPI {
                                 console.error('Failed to parse streaming content:', e);
                             }
                         }
+                        if (line.startsWith('3:')) {
+                            console.error('Server error:', line.slice(2));
+                            continue;
+                        }
                     }
                 }
 
-                // Save the AI response to database
                 if (aiMessageContent.trim()) {
                     const saveResponse = await fetch(`/api/chat/${chatId}/messages/ai`, {
                         method: 'POST',
