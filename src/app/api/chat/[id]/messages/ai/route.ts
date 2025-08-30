@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '~/db/drizzle';
 import { message } from '~/db/schema';
+import { auth } from '@clerk/nextjs/server';
 import { randomUUID } from 'crypto';
 import { z } from 'zod';
 
@@ -9,6 +10,10 @@ export async function POST(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { userId } = await auth();
+        if (!userId) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
         const { id: chatId } = await params;
         const { content } = await request.json();
 

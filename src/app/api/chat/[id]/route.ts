@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '~/db/drizzle';
 import { chat } from '~/db/schema';
 import { eq, and } from 'drizzle-orm';
-import { auth } from '~/lib/auth';
+import { auth } from '@clerk/nextjs/server';
 
 
 //GET SPECIFIC CHAT
@@ -13,15 +13,10 @@ export async function GET(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const session = await auth.api.getSession({
-            headers: req.headers
-        });
-
-        if (!session) {
+        const { userId } = await auth();
+        if (!userId) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
-
-        const userId = session.user.id;
         const { id } = await params;
         const chatId = id;
 

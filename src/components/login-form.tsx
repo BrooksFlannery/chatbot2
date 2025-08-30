@@ -8,8 +8,8 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card"
-import { authClient } from "~/lib/auth-client"
 import { redirect } from 'next/navigation'
+// import { useClerk } from "@clerk/nextjs"
 import Link from 'next/link'
 import { z } from 'zod'
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -29,7 +29,7 @@ const formSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
 })
-import { signIn } from "~/server/server"
+// BetterAuth server action removed
 import { useState } from "react"
 import { Loader2 } from "lucide-react"
 import { useSidebar } from "./ui/sidebar"
@@ -46,23 +46,15 @@ export function LoginForm(props: React.ComponentProps<"div">) {
   })
 
   const signInWithGoogle = async () => {
-    await authClient.signIn.social({
-      provider: "google",
-      callbackURL: "/"
-    })
-    setOpen(true)
+    // Redirect to the sign-in page where Clerk handles providers
+    redirect('/login')
   }
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true)
-    const { success, message } = await signIn(values.email, values.password)
-    if (success) {
-      toast.success(message as string);
-      setOpen(true);
-      redirect('/')
-    } else {
-      toast.error(message as string);
-    }
+    // For email/password with Clerk, prefer <SignIn/> component.
+    // Here we just redirect to the sign-in page.
+    redirect('/login')
     setIsLoading(false)
   }
 

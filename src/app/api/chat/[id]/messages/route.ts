@@ -5,7 +5,7 @@ import { db } from '~/db/drizzle';
 import { message } from '~/db/schema';
 import { eq } from 'drizzle-orm';
 import { NextRequest } from 'next/server';
-import { auth } from '~/lib/auth';
+import { auth } from '@clerk/nextjs/server';
 
 //POST MESSAGE    GET MESSAGES
 
@@ -14,8 +14,8 @@ export async function POST(
     content: { params: Promise<{ id: string }> }
 ) {
     try {
-        const session = await auth.api.getSession({ headers: req.headers });
-        if (!session) {
+        const { userId } = await auth();
+        if (!userId) {
             return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
         }
 
@@ -77,11 +77,8 @@ export async function GET(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const session = await auth.api.getSession({
-            headers: req.headers
-        });
-
-        if (!session) {
+        const { userId } = await auth();
+        if (!userId) {
             return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
         }
 
