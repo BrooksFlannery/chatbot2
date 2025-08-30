@@ -1,4 +1,3 @@
-import { auth } from "~/lib/auth"; // path to your auth file
-import { toNextJsHandler } from "better-auth/next-js";
-
-export const { POST, GET } = toNextJsHandler(auth);
+// Removed BetterAuth endpoint; Clerk uses its own routes and middleware.
+export const GET = undefined as never;
+export const POST = undefined as never;

@@ -16,7 +16,7 @@ import {
     FormLabel,
     FormMessage,
 } from "~/components/ui/form"
-import { signUp } from "~/server/server"
+// BetterAuth server action removed
 import { toast } from "sonner"
 import { useState } from "react"
 import { Loader2 } from "lucide-react"
@@ -39,15 +39,10 @@ export function SignupForm(props: React.ComponentProps<"div">) {
             password: '',
         },
     })
-    const onSubmit = async (values: z.infer<typeof signupSchema>) => {
+    const onSubmit = async () => {
         setIsLoading(true)
-        const { success, message } = await signUp(values.email, values.password, values.name)
-        if (success) {
-            toast.success(message as string);
-            redirect('/dashboard')
-        } else {
-            toast.error(message as string);
-        }
+        // For email/password with Clerk, prefer <SignUp/> component.
+        redirect('/signup')
         setIsLoading(false)
     }
 
