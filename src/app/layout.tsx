@@ -7,6 +7,8 @@ import { SidebarInset, SidebarProvider, SidebarTrigger } from "~/components/ui/s
 import { AppSidebar } from "~/components/app-sidebar"
 import { ClerkProvider } from "@clerk/nextjs";
 import { UserDisplay } from "~/components/user-display"
+import { FlowgladProvider } from "@flowglad/nextjs"
+import { currentUser } from "@clerk/nextjs/server"
 
 
 export const metadata: Metadata = {
@@ -20,32 +22,34 @@ const geist = Geist({
   variable: "--font-geist-sans",
 });
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const user = await currentUser()
+
   return (
     <ClerkProvider>
       <html lang="en" className={`${geist.variable}`}>
         <body>
-          <SidebarProvider>
-            <AppSidebar />
-            <SidebarInset>
-              <header className="flex h-16 shrink-0 items-center justify-between border-b px-4">
-                <div className="flex items-center gap-2">
-                  <SidebarTrigger className="-ml-1" />
+          <FlowgladProvider loadBilling={!!user}>
+            <SidebarProvider>
+              <AppSidebar />
+              <SidebarInset>
+                <header className="flex h-16 shrink-0 items-center justify-between border-b px-4">
+                  <div className="flex items-center gap-2">
+                    <SidebarTrigger className="-ml-1" />
+                  </div>
+                  <UserDisplay />
+                </header>
+                <div className="flex flex-1 flex-col gap-4 p-4">
+                  {children}
                 </div>
-                <UserDisplay />
-              </header>
-              <div className="flex flex-1 flex-col gap-4 p-4">
-                {children}
-              </div>
-            </SidebarInset>
-            <Toaster />
-          </SidebarProvider>
+              </SidebarInset>
+              <Toaster />
+            </SidebarProvider>
+          </FlowgladProvider>
         </body>
       </html>
     </ClerkProvider>
   );
 }
 
-function getServerSession(authOptions: any) {
-  throw new Error("Function not implemented.");
-}
+
