@@ -22,6 +22,7 @@
   "dependencies": {
     "@ai-sdk/openai": "^1.3.22",
     "@clerk/nextjs": "^6.31.6",
+    "@flowglad/nextjs": "^0.10.17",
     "@hookform/resolvers": "^5.1.1",
     "@neondatabase/serverless": "^1.0.1",
     "@radix-ui/react-dialog": "^1.1.14",
